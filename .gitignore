@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+
+# Runtime SFTP artifacts
+sftp_root/*
+!sftp_root/.gitkeep
+
+# Host key
+sftp_server.key
+
+# Private keys
+*.key
