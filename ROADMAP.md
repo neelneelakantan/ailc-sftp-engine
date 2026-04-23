@@ -3,6 +3,8 @@
 ## Vision
 To build a resilient, "AI-Ready" SFTP platform that moves from deterministic file transfers to programmable, autonomous data orchestration.
 
+See FUTURE_WORK.md for the current forward-looking roadmap.
+
 ## The 7 Sprints
 1. **Sprint 1: Observability & Truth** - Structured JSON logging and correlation IDs for AI-assisted monitoring.
 2. **Sprint 2: Programmable Plumbing** - Abstract Base Classes (ABCs) to decouple SFTP logic from storage vendors (S3, Disk, etc.).

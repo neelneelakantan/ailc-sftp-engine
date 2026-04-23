@@ -203,7 +203,6 @@ This is the foundation for:
 
 - anomaly detection  
 - automated remediation  
-- predictive failure analysis  
 - intelligent retry strategies  
 
 AILC‑SFTP is intentionally designed to be “AI-observable.”
@@ -223,3 +222,10 @@ The integrity model provides:
 This elevates SFTP from a “best effort” protocol to a **verifiable, trustworthy data movement layer**.
 
 
+## Related Documents
+
+- `ARCHITECTURE.md` — deterministic core  
+- `OBSERVABILITY.md` — log shapes and telemetry  
+- `AGENTIC_OVERLAY.md` — agentic layer built on top of integrity signals  
+- `NORTH_STAR.md` — aspirational AI behaviors  
+- `FUTURE_WORK.md` — planned extensions  

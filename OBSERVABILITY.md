@@ -204,21 +204,6 @@ AILC‑SFTP is designed for this from day one.
 
 ---
 
-## 8. Future Enhancements
-
-Planned observability improvements:
-
-- OpenTelemetry exporters  
-- FastAPI `/health` and `/metrics` endpoints  
-- Prometheus counters (uploads, failures, retries)  
-- Trace IDs for multi-hop workflows  
-- Log sampling for high-volume environments  
-- AI-based anomaly scoring  
-
-These will be added in future roadmap sprints.
-
----
-
 ## 9. Summary
 
 The observability model provides:
