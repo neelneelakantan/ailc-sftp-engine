@@ -14,5 +14,6 @@ class TransferResult:
     # Optional: include remote/local names if you want richer JSON
     local_file: str = ""
     remote_file: str = ""
+    error_log: str = ""
 
 

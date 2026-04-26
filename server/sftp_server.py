@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 # main.py or server.py logic
 import uuid
+import random
 
 # from s3_storage import S3Storage  <-- Commented out until you have boto3 installed
 from storage.local_storage import LocalStorage
@@ -84,6 +85,8 @@ class LocalFileHandle(paramiko.SFTPHandle):
         try:
             os.lseek(self.fd, offset, os.SEEK_SET)
             os.write(self.fd, data)
+            # Artificial latency for telemetry realism
+            time.sleep(random.randint(1, 60) * 0.01)  # 1 ms
             return paramiko.SFTP_OK
         except Exception as e:
             print("WRITE ERROR:", e, flush=True)

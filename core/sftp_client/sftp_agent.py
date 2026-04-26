@@ -8,7 +8,12 @@ import time
 from core.observability.logger import logger
 from core.deterministic_layer.hasher import hash_file
 from config.config import AILCConfig as CFG
+from core.sftp_client.adaptive_controller import AdaptiveChunkController
+from core.sftp_client.agentic_controller import AgenticController
+from core.sftp_client.agents.soft_agent import SoftAgent
 from core.sftp_client.transfer_result import TransferResult
+from core.sftp_client.perception import ChunkObservation
+from core.sftp_client.agents.noop_agent import NoOpAgent
 
 # Load variables
 load_dotenv()
@@ -38,6 +43,20 @@ def resumable_upload(sftp, local_path, remote_name, chunk_size=100):
     latency_profile = []
     total_bytes = 0
 
+    print(f"Starting upload with initial chunk size: {chunk_size} bytes", flush=True)
+    # Runtime‑adaptive chunk size (agent can modify this)
+    base_controller = AdaptiveChunkController(chunk_size)
+    controller = AgenticController(
+        base_controller,
+        comparison_mode=True,
+        blend_mode=True,
+        conditional_override=True
+    )
+
+    print(f"comparison_mode := {controller.comparison_mode}", flush=True)
+    controller.agent = SoftAgent()
+    
+    print(f"NEXT: Starting upload with initial chunk size: {controller.chunk_size} bytes", flush=True)
     local_size = os.path.getsize(local_path)
     remote_size = 0
 
@@ -55,22 +74,57 @@ def resumable_upload(sftp, local_path, remote_name, chunk_size=100):
 
     mode = 'ab' if remote_size > 0 else 'wb'
 
-    with sftp.open(remote_name, mode) as f_remote:
+    with sftp.open(remote_name, mode, bufsize=0) as f_remote:
         with open(local_path, 'rb') as f_local:
             if remote_size > 0:
                 f_local.seek(remote_size)
 
             while True:
-                chunk = f_local.read(chunk_size)
+                chunk = f_local.read(controller.chunk_size)
                 if not chunk:
                     break
 
                 start = time.time()
+                print("before chunk write", flush=True)
                 f_remote.write(chunk)
-                latency_profile.append(int((time.time() - start) * 1000))
+                print("Chunk written:", len(chunk), flush=True)
+                latency_ms = int((time.time() - start) * 1000)
+                latency_profile.append(latency_ms)
+                logger.info(
+                    "chunk_written",
+                    extra={
+                        "correlation_id": session_id,
+                        "chunk_index": chunks_sent,
+                        "bytes": len(chunk),
+                        "latency_ms": latency_ms,
+                        "offset": remote_size + total_bytes,
+                        "mode": "resume" if remote_size > 0 else "fresh",
+                        "chunk_size": chunk_size # Agent can adjust this for next chunk
+                    }
+                )
 
                 chunks_sent += 1
                 total_bytes += len(chunk)
+                obs = ChunkObservation(
+                    latency_ms=latency_ms,
+                    chunk_size=controller.chunk_size,
+                    chunk_index=chunks_sent,
+                    bytes_sent=len(chunk),
+                    offset=remote_size + total_bytes
+                )
+                
+                action = controller.adjust(obs)
+
+                if action.new_size != action.old_size:
+                    logger.info(
+                        "chunk_size_adjusted",
+                        extra={
+                            "correlation_id": session_id,
+                            "previous_chunk_size": action.old_size,
+                            "new_chunk_size": action.new_size,
+                            "decision": action.decision
+                        }
+                    )
 
                 if CFG.CHUNK_SLEEP_MS > 0:
                     time.sleep(CFG.CHUNK_SLEEP_MS / 1000.0)
